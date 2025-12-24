@@ -102,22 +102,22 @@
         let isRunning = false;
         let speed = 200;
 
-        // Data Pemain
+        // Data Pemain (Definisi Awal)
         let p1 = {
             name: "", school: "", score: 0,
-            snake: [{x: 5, y: 10}, {x: 5, y: 11}, {x: 5, y: 12}],
-            dx: 0, dy: -1, colorHead: '#3b82f6', colorBody: '#1d4ed8', active: true
+            snake: [], dx: 0, dy: -1, 
+            colorHead: '#3b82f6', colorBody: '#1d4ed8', active: true
         };
 
         let p2 = {
             name: "", school: "", score: 0,
-            snake: [{x: 15, y: 10}, {x: 15, y: 11}, {x: 15, y: 12}],
-            dx: 0, dy: -1, colorHead: '#ef4444', colorBody: '#b91c1c', active: true
+            snake: [], dx: 0, dy: -1, 
+            colorHead: '#ef4444', colorBody: '#b91c1c', active: true
         };
 
         // Soal & Makanan
         let currentQuestion = {};
-        let foods = []; // Makanan disharing, posisi sama di kedua board tapi relatif terhadap canvas masing-masing
+        let foods = []; 
 
         function startGame() {
             const n1 = document.getElementById('inputNameP1').value.trim();
@@ -130,8 +130,22 @@
                 return;
             }
 
+            // Set Data Nama
             p1.name = n1; p1.school = s1;
             p2.name = n2; p2.school = s2;
+
+            // --- PERBAIKAN DI SINI: RESET POSISI & ARAH ---
+            // Kita paksa reset agar input saat mengetik nama tidak mempengaruhi arah ular
+            p1.snake = [{x: 5, y: 10}, {x: 5, y: 11}, {x: 5, y: 12}];
+            p1.dx = 0; p1.dy = -1; // Arah awal ke ATAS
+            p1.active = true;
+            p1.score = 0;
+
+            p2.snake = [{x: 15, y: 10}, {x: 15, y: 11}, {x: 15, y: 12}];
+            p2.dx = 0; p2.dy = -1; // Arah awal ke ATAS
+            p2.active = true;
+            p2.score = 0;
+            // ----------------------------------------------
 
             document.getElementById('p1NameDisplay').innerText = p1.name;
             document.getElementById('p1SchoolDisplay').innerText = p1.school;
@@ -142,6 +156,9 @@
             
             generateQuestion();
             isRunning = true;
+            
+            // Clear loop lama jika ada
+            if (gameLoop) clearTimeout(gameLoop);
             gameLoop = setTimeout(runGame, speed);
         }
 
@@ -162,7 +179,6 @@
             drawBoard('canvasP1', p1);
             drawBoard('canvasP2', p2);
 
-            // Speed bertambah sedikit setiap putaran agar makin tegang
             let dynamicSpeed = Math.max(100, 200 - ((p1.score + p2.score) * 2));
             gameLoop = setTimeout(runGame, dynamicSpeed);
         }
@@ -173,7 +189,6 @@
             const head = { x: player.snake[0].x + player.dx, y: player.snake[0].y + player.dy };
             player.snake.unshift(head);
 
-            // Cek Makan
             let ateIndex = -1;
             for (let i = 0; i < foods.length; i++) {
                 if (head.x === foods[i].x && head.y === foods[i].y) {
@@ -187,9 +202,8 @@
                 if (eaten.isCorrect) {
                     player.score++;
                     updateScoreUI();
-                    generateQuestion(); // Soal ganti untuk kedua pemain
+                    generateQuestion(); 
                 } else {
-                    // Salah makan = Kalah langsung
                     player.active = false; 
                 }
             } else {
@@ -201,12 +215,10 @@
             if (!player.active) return;
             const head = player.snake[0];
 
-            // Tembok
             if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
                 player.active = false;
             }
 
-            // Tabrak diri sendiri
             for (let i = 1; i < player.snake.length; i++) {
                 if (head.x === player.snake[i].x && head.y === player.snake[i].y) {
                     player.active = false;
@@ -215,7 +227,6 @@
         }
 
         function generateQuestion() {
-            // Logika Matematika
             const ops = ['+', '-', '*'];
             const op = ops[Math.floor(Math.random() * ops.length)];
             let a, b, ans;
@@ -227,11 +238,9 @@
             currentQuestion = { text: `${a} ${op} ${b} = ?`, answer: ans };
             document.getElementById('questionDisplay').innerText = currentQuestion.text;
 
-            // Spawn Makanan
             foods = [];
-            foods.push(createFood(ans, true)); // Jawaban Benar
+            foods.push(createFood(ans, true)); 
             
-            // 2 Jawaban Salah
             for(let i=0; i<2; i++){
                 let wrong;
                 do { wrong = ans + Math.floor(Math.random()*10)-5; } 
@@ -244,8 +253,6 @@
             let pos;
             while(true) {
                 pos = { x: Math.floor(Math.random()*tileCount), y: Math.floor(Math.random()*tileCount) };
-                // Pastikan tidak kena ular P1 atau P2 (agak tricky karena 2 board beda, tapi kita random aja cukup aman)
-                // Kita hanya cek agar tidak menumpuk makanan lain
                 let clash = false;
                 for(let f of foods) if(f.x === pos.x && f.y === pos.y) clash = true;
                 if(!clash) break;
@@ -256,9 +263,8 @@
         function drawBoard(canvasId, player) {
             const ctx = document.getElementById(canvasId).getContext('2d');
             ctx.fillStyle = '#1f2937';
-            ctx.fillRect(0, 0, 400, 400); // Clear
+            ctx.fillRect(0, 0, 400, 400); 
 
-            // Draw Food
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = 'bold 14px Fredoka';
             for (let f of foods) {
                 ctx.fillStyle = '#facc15';
@@ -266,19 +272,17 @@
                 ctx.fillStyle = 'black'; ctx.fillText(f.value, f.x*gridSize + gridSize/2, f.y*gridSize + gridSize/2+1);
             }
 
-            // Draw Snake
             for (let i = 0; i < player.snake.length; i++) {
                 ctx.fillStyle = (i===0) ? player.colorHead : player.colorBody;
                 let p = player.snake[i];
                 ctx.fillRect(p.x*gridSize+1, p.y*gridSize+1, gridSize-2, gridSize-2);
                 
-                // Mata (di kepala)
                 if (i===0) {
                     ctx.fillStyle = 'white';
-                    if (player.dx === 1) { ctx.fillRect(p.x*20+12, p.y*20+4, 4, 4); ctx.fillRect(p.x*20+12, p.y*20+12, 4, 4); } // Kanan
-                    else if (player.dx === -1) { ctx.fillRect(p.x*20+4, p.y*20+4, 4, 4); ctx.fillRect(p.x*20+4, p.y*20+12, 4, 4); } // Kiri
-                    else if (player.dy === -1) { ctx.fillRect(p.x*20+4, p.y*20+4, 4, 4); ctx.fillRect(p.x*20+12, p.y*20+4, 4, 4); } // Atas
-                    else { ctx.fillRect(p.x*20+4, p.y*20+12, 4, 4); ctx.fillRect(p.x*20+12, p.y*20+12, 4, 4); } // Bawah
+                    if (player.dx === 1) { ctx.fillRect(p.x*20+12, p.y*20+4, 4, 4); ctx.fillRect(p.x*20+12, p.y*20+12, 4, 4); } 
+                    else if (player.dx === -1) { ctx.fillRect(p.x*20+4, p.y*20+4, 4, 4); ctx.fillRect(p.x*20+4, p.y*20+12, 4, 4); } 
+                    else if (player.dy === -1) { ctx.fillRect(p.x*20+4, p.y*20+4, 4, 4); ctx.fillRect(p.x*20+12, p.y*20+4, 4, 4); } 
+                    else { ctx.fillRect(p.x*20+4, p.y*20+12, 4, 4); ctx.fillRect(p.x*20+12, p.y*20+12, 4, 4); } 
                 }
             }
         }
@@ -290,6 +294,9 @@
 
         // Kontrol Input
         document.addEventListener('keydown', (e) => {
+            // PERBAIKAN: Jika belum mulai (isRunning false) atau sedang mengetik di input, jangan gerakkan ular
+            if (!isRunning || e.target.tagName === 'INPUT') return;
+
             // P1 (WASD)
             if (e.key === 'w' || e.key === 'W') if (p1.dy !== 1) { p1.dx = 0; p1.dy = -1; }
             if (e.key === 's' || e.key === 'S') if (p1.dy !== -1) { p1.dx = 0; p1.dy = 1; }
