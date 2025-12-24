@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Snake: VERSUS MODE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Fredoka', sans-serif; background-color: #111827; color: white; overflow: hidden; }
+        canvas { background-color: #1f2937; border-radius: 8px; }
+        .grid-bg { background-image: radial-gradient(#374151 1px, transparent 1px); background-size: 20px 20px; }
+    </style>
+</head>
+<body class="h-screen w-full flex flex-col items-center justify-center">
+
+    <!-- Header -->
+    <div class="absolute top-4 w-full text-center">
+        <h1 class="text-3xl font-bold text-yellow-400">⚔️ MATH SNAKE: VERSUS ⚔️</h1>
+        <div class="mt-2 bg-indigo-600 inline-block px-6 py-2 rounded-full border-2 border-indigo-400 shadow-lg">
+            <span class="text-indigo-200 text-sm uppercase tracking-wider block">Soal Rebutan</span>
+            <span id="questionDisplay" class="text-3xl font-bold text-white">MENUNGGU...</span>
+        </div>
+    </div>
+
+    <!-- Arena Bermain -->
+    <div class="flex flex-row w-full max-w-6xl justify-center items-center gap-4 px-4 mt-16">
+        
+        <!-- Pemain 1 (Kiri) -->
+        <div class="flex flex-col items-center w-1/2 relative">
+            <div class="flex justify-between w-full max-w-[400px] mb-2 px-2">
+                <div class="text-left">
+                    <div class="text-blue-400 font-bold text-lg" id="p1NameDisplay">Player 1</div>
+                    <div class="text-gray-500 text-xs" id="p1SchoolDisplay">-</div>
+                </div>
+                <div class="text-3xl font-bold text-blue-500" id="p1Score">0</div>
+            </div>
+            <canvas id="canvasP1" width="400" height="400" class="border-4 border-blue-600 grid-bg shadow-[0_0_20px_rgba(37,99,235,0.3)] w-full max-w-[400px]"></canvas>
+            <div class="mt-2 text-gray-400 text-sm">Gerak: <span class="font-bold text-white border px-1 rounded">W A S D</span></div>
+        </div>
+
+        <!-- VS Badge -->
+        <div class="text-4xl font-black text-red-500 italic absolute z-0 opacity-20 md:opacity-100 md:relative">VS</div>
+
+        <!-- Pemain 2 (Kanan) -->
+        <div class="flex flex-col items-center w-1/2 relative">
+            <div class="flex justify-between w-full max-w-[400px] mb-2 px-2">
+                <div class="text-3xl font-bold text-red-500" id="p2Score">0</div>
+                <div class="text-right">
+                    <div class="text-red-400 font-bold text-lg" id="p2NameDisplay">Player 2</div>
+                    <div class="text-gray-500 text-xs" id="p2SchoolDisplay">-</div>
+                </div>
+            </div>
+            <canvas id="canvasP2" width="400" height="400" class="border-4 border-red-600 grid-bg shadow-[0_0_20px_rgba(220,38,38,0.3)] w-full max-w-[400px]"></canvas>
+            <div class="mt-2 text-gray-400 text-sm">Gerak: <span class="font-bold text-white border px-1 rounded">PANAH</span></div>
+        </div>
+
+    </div>
+
+    <!-- Overlay Form -->
+    <div id="overlay" class="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50 p-4">
+        <h2 class="text-4xl font-bold text-yellow-400 mb-6">Mode Kompetisi</h2>
+        
+        <div class="flex flex-col md:flex-row gap-8 w-full max-w-4xl justify-center">
+            <!-- Form P1 -->
+            <div class="bg-gray-800 p-6 rounded-lg border-2 border-blue-600 w-full md:w-1/3">
+                <h3 class="text-xl font-bold text-blue-400 mb-4 text-center">Pemain 1 (WASD)</h3>
+                <input type="text" id="inputNameP1" placeholder="Nama P1" class="w-full mb-3 px-3 py-2 bg-gray-700 rounded text-white border border-gray-600 focus:border-blue-500 outline-none">
+                <input type="text" id="inputSchoolP1" placeholder="Sekolah P1" class="w-full mb-3 px-3 py-2 bg-gray-700 rounded text-white border border-gray-600 focus:border-blue-500 outline-none">
+            </div>
+
+            <!-- Form P2 -->
+            <div class="bg-gray-800 p-6 rounded-lg border-2 border-red-600 w-full md:w-1/3">
+                <h3 class="text-xl font-bold text-red-400 mb-4 text-center">Pemain 2 (Panah)</h3>
+                <input type="text" id="inputNameP2" placeholder="Nama P2" class="w-full mb-3 px-3 py-2 bg-gray-700 rounded text-white border border-gray-600 focus:border-red-500 outline-none">
+                <input type="text" id="inputSchoolP2" placeholder="Sekolah P2" class="w-full mb-3 px-3 py-2 bg-gray-700 rounded text-white border border-gray-600 focus:border-red-500 outline-none">
+            </div>
+        </div>
+
+        <button onclick="startGame()" class="mt-8 bg-gradient-to-r from-blue-600 to-red-600 hover:scale-105 transition transform text-white font-bold py-4 px-12 rounded-full text-xl shadow-lg border-2 border-white">
+            MULAI PERTARUNGAN!
+        </button>
+        <p id="statusMsg" class="mt-4 text-yellow-500 text-sm hidden">Menyimpan data...</p>
+    </div>
+
+    <!-- Overlay Game Over -->
+    <div id="gameOverOverlay" class="hidden absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-40">
+        <h2 class="text-5xl font-bold text-white mb-2">GAME OVER</h2>
+        <h3 id="winnerText" class="text-3xl font-bold text-yellow-400 mb-8">Pemenang: -</h3>
+        <button onclick="location.reload()" class="bg-white text-black font-bold py-3 px-8 rounded-full hover:bg-gray-200">Main Lagi</button>
+    </div>
+
+    <script>
+        // ISI URL GOOGLE SCRIPT DI SINI
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWlJpGoHe3TDBAIJQUjWpgp_pSjk2KmxWEhW4zQ22qftU6ruHiWrIebk9-0hZ9DCwU/exec'; 
+
+        // Config
+        const gridSize = 20;
+        const tileCount = 20;
+        
+        let gameLoop;
+        let isRunning = false;
+        let speed = 200;
+
+        // Data Pemain
+        let p1 = {
+            name: "", school: "", score: 0,
+            snake: [{x: 5, y: 10}, {x: 5, y: 11}, {x: 5, y: 12}],
+            dx: 0, dy: -1, colorHead: '#3b82f6', colorBody: '#1d4ed8', active: true
+        };
+
+        let p2 = {
+            name: "", school: "", score: 0,
+            snake: [{x: 15, y: 10}, {x: 15, y: 11}, {x: 15, y: 12}],
+            dx: 0, dy: -1, colorHead: '#ef4444', colorBody: '#b91c1c', active: true
+        };
+
+        // Soal & Makanan
+        let currentQuestion = {};
+        let foods = []; // Makanan disharing, posisi sama di kedua board tapi relatif terhadap canvas masing-masing
+
+        function startGame() {
+            const n1 = document.getElementById('inputNameP1').value.trim();
+            const s1 = document.getElementById('inputSchoolP1').value.trim();
+            const n2 = document.getElementById('inputNameP2').value.trim();
+            const s2 = document.getElementById('inputSchoolP2').value.trim();
+
+            if (!n1 || !s1 || !n2 || !s2) {
+                alert("Mohon lengkapi semua data pemain!");
+                return;
+            }
+
+            p1.name = n1; p1.school = s1;
+            p2.name = n2; p2.school = s2;
+
+            document.getElementById('p1NameDisplay').innerText = p1.name;
+            document.getElementById('p1SchoolDisplay').innerText = p1.school;
+            document.getElementById('p2NameDisplay').innerText = p2.name;
+            document.getElementById('p2SchoolDisplay').innerText = p2.school;
+
+            document.getElementById('overlay').classList.add('hidden');
+            
+            generateQuestion();
+            isRunning = true;
+            gameLoop = setTimeout(runGame, speed);
+        }
+
+        function runGame() {
+            if (!isRunning) return;
+
+            updateSnake(p1);
+            updateSnake(p2);
+            
+            checkCollisions(p1);
+            checkCollisions(p2);
+
+            if (!p1.active || !p2.active) {
+                endGame();
+                return;
+            }
+
+            drawBoard('canvasP1', p1);
+            drawBoard('canvasP2', p2);
+
+            // Speed bertambah sedikit setiap putaran agar makin tegang
+            let dynamicSpeed = Math.max(100, 200 - ((p1.score + p2.score) * 2));
+            gameLoop = setTimeout(runGame, dynamicSpeed);
+        }
+
+        function updateSnake(player) {
+            if (!player.active) return;
+
+            const head = { x: player.snake[0].x + player.dx, y: player.snake[0].y + player.dy };
+            player.snake.unshift(head);
+
+            // Cek Makan
+            let ateIndex = -1;
+            for (let i = 0; i < foods.length; i++) {
+                if (head.x === foods[i].x && head.y === foods[i].y) {
+                    ateIndex = i;
+                    break;
+                }
+            }
+
+            if (ateIndex !== -1) {
+                const eaten = foods[ateIndex];
+                if (eaten.isCorrect) {
+                    player.score++;
+                    updateScoreUI();
+                    generateQuestion(); // Soal ganti untuk kedua pemain
+                } else {
+                    // Salah makan = Kalah langsung
+                    player.active = false; 
+                }
+            } else {
+                player.snake.pop();
+            }
+        }
+
+        function checkCollisions(player) {
+            if (!player.active) return;
+            const head = player.snake[0];
+
+            // Tembok
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                player.active = false;
+            }
+
+            // Tabrak diri sendiri
+            for (let i = 1; i < player.snake.length; i++) {
+                if (head.x === player.snake[i].x && head.y === player.snake[i].y) {
+                    player.active = false;
+                }
+            }
+        }
+
+        function generateQuestion() {
+            // Logika Matematika
+            const ops = ['+', '-', '*'];
+            const op = ops[Math.floor(Math.random() * ops.length)];
+            let a, b, ans;
+
+            if (op === '+') { a = Math.floor(Math.random()*20); b = Math.floor(Math.random()*20); ans=a+b; }
+            else if (op === '-') { a = Math.floor(Math.random()*20)+10; b = Math.floor(Math.random()*10); ans=a-b; }
+            else { a = Math.floor(Math.random()*9)+1; b = Math.floor(Math.random()*9)+1; ans=a*b; }
+
+            currentQuestion = { text: `${a} ${op} ${b} = ?`, answer: ans };
+            document.getElementById('questionDisplay').innerText = currentQuestion.text;
+
+            // Spawn Makanan
+            foods = [];
+            foods.push(createFood(ans, true)); // Jawaban Benar
+            
+            // 2 Jawaban Salah
+            for(let i=0; i<2; i++){
+                let wrong;
+                do { wrong = ans + Math.floor(Math.random()*10)-5; } 
+                while(wrong===ans || wrong<0 || foods.some(f=>f.value===wrong));
+                foods.push(createFood(wrong, false));
+            }
+        }
+
+        function createFood(val, isCorrect) {
+            let pos;
+            while(true) {
+                pos = { x: Math.floor(Math.random()*tileCount), y: Math.floor(Math.random()*tileCount) };
+                // Pastikan tidak kena ular P1 atau P2 (agak tricky karena 2 board beda, tapi kita random aja cukup aman)
+                // Kita hanya cek agar tidak menumpuk makanan lain
+                let clash = false;
+                for(let f of foods) if(f.x === pos.x && f.y === pos.y) clash = true;
+                if(!clash) break;
+            }
+            return { x: pos.x, y: pos.y, value: val, isCorrect: isCorrect };
+        }
+
+        function drawBoard(canvasId, player) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            ctx.fillStyle = '#1f2937';
+            ctx.fillRect(0, 0, 400, 400); // Clear
+
+            // Draw Food
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = 'bold 14px Fredoka';
+            for (let f of foods) {
+                ctx.fillStyle = '#facc15';
+                ctx.beginPath(); ctx.arc(f.x*gridSize + gridSize/2, f.y*gridSize + gridSize/2, gridSize/2 - 2, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = 'black'; ctx.fillText(f.value, f.x*gridSize + gridSize/2, f.y*gridSize + gridSize/2+1);
+            }
+
+            // Draw Snake
+            for (let i = 0; i < player.snake.length; i++) {
+                ctx.fillStyle = (i===0) ? player.colorHead : player.colorBody;
+                let p = player.snake[i];
+                ctx.fillRect(p.x*gridSize+1, p.y*gridSize+1, gridSize-2, gridSize-2);
+                
+                // Mata (di kepala)
+                if (i===0) {
+                    ctx.fillStyle = 'white';
+                    if (player.dx === 1) { ctx.fillRect(p.x*20+12, p.y*20+4, 4, 4); ctx.fillRect(p.x*20+12, p.y*20+12, 4, 4); } // Kanan
+                    else if (player.dx === -1) { ctx.fillRect(p.x*20+4, p.y*20+4, 4, 4); ctx.fillRect(p.x*20+4, p.y*20+12, 4, 4); } // Kiri
+                    else if (player.dy === -1) { ctx.fillRect(p.x*20+4, p.y*20+4, 4, 4); ctx.fillRect(p.x*20+12, p.y*20+4, 4, 4); } // Atas
+                    else { ctx.fillRect(p.x*20+4, p.y*20+12, 4, 4); ctx.fillRect(p.x*20+12, p.y*20+12, 4, 4); } // Bawah
+                }
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('p1Score').innerText = p1.score;
+            document.getElementById('p2Score').innerText = p2.score;
+        }
+
+        // Kontrol Input
+        document.addEventListener('keydown', (e) => {
+            // P1 (WASD)
+            if (e.key === 'w' || e.key === 'W') if (p1.dy !== 1) { p1.dx = 0; p1.dy = -1; }
+            if (e.key === 's' || e.key === 'S') if (p1.dy !== -1) { p1.dx = 0; p1.dy = 1; }
+            if (e.key === 'a' || e.key === 'A') if (p1.dx !== 1) { p1.dx = -1; p1.dy = 0; }
+            if (e.key === 'd' || e.key === 'D') if (p1.dx !== -1) { p1.dx = 1; p1.dy = 0; }
+
+            // P2 (Panah)
+            if (e.key === 'ArrowUp') if (p2.dy !== 1) { p2.dx = 0; p2.dy = -1; }
+            if (e.key === 'ArrowDown') if (p2.dy !== -1) { p2.dx = 0; p2.dy = 1; }
+            if (e.key === 'ArrowLeft') if (p2.dx !== 1) { p2.dx = -1; p2.dy = 0; }
+            if (e.key === 'ArrowRight') if (p2.dx !== -1) { p2.dx = 1; p2.dy = 0; }
+            
+            // Prevent Scroll
+            if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) e.preventDefault();
+        });
+
+        function endGame() {
+            isRunning = false;
+            let winner = "";
+            let reason = "";
+
+            if (!p1.active && !p2.active) {
+                winner = "SERI!";
+            } else if (!p1.active) {
+                winner = p2.name + " MENANG!";
+                reason = p1.name + " Mati duluan!";
+            } else if (!p2.active) {
+                winner = p1.name + " MENANG!";
+                reason = p2.name + " Mati duluan!";
+            }
+
+            document.getElementById('winnerText').innerText = winner;
+            document.getElementById('gameOverOverlay').classList.remove('hidden');
+            
+            saveData(winner);
+        }
+
+        function saveData(winnerName) {
+            if (!GOOGLE_SCRIPT_URL) return;
+
+            const formData = new FormData();
+            formData.append('pemenang', winnerName);
+            formData.append('nama_p1', p1.name);
+            formData.append('sekolah_p1', p1.school);
+            formData.append('skor_p1', p1.score);
+            formData.append('nama_p2', p2.name);
+            formData.append('sekolah_p2', p2.school);
+            formData.append('skor_p2', p2.score);
+
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: formData })
+                .then(res => console.log("Data tersimpan"))
+                .catch(err => console.error(err));
+        }
+
+    </script>
+</body>
+</html>
